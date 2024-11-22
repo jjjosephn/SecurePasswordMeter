@@ -35,7 +35,7 @@ export function PasswordGenerator() {
          password = capitalizeRandomWord(password);
       }
 
-      if (!/[!@#$%^&*()_+-=[]{};:,.<>?]/.test(password)) {
+      if (!/[!@#$%^&*()_+\-=[\]{};:,.<>?]/.test(password)) {
          password = addRandomPunctuation(password);
       }
 
