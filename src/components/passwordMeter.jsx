@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import zxcvbn from 'zxcvbn';
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
 
 const strengthLevels = [
   { label: 'Bad', color: '#f56565' }, // red-500
@@ -11,15 +13,132 @@ const strengthLevels = [
 export function PasswordMeter() {
   const [password, setPassword] = useState('');
   const [strength, setStrength] = useState(0);
+  const [score, setScore] = useState(0);
+  const [scoreDesc, setScoreDesc] = useState([]);
+  const [requirementsMet, setRequirementsMet] = useState({
+    length: false,
+    lowercase: false,
+    uppercase: false,
+    number: false,
+    specialChar: false,
+    allTypes: false,
+    longLength: false,
+    noSuggestions: false,
+  });
 
   useEffect(() => {
-    if (password) {
+    if (!password) {
+      setStrength(0);
+      resetScore();
+    } else {
       const result = zxcvbn(password);
       setStrength(result.score);
-    } else {
-      setStrength(0);
+      calculateScore(password, result.feedback.suggestions);
     }
   }, [password]);
+
+  const resetScore = () => {
+    setScore(0);
+    setScoreDesc([]);
+    setRequirementsMet({
+      length: false,
+      lowercase: false,
+      uppercase: false,
+      number: false,
+      specialChar: false,
+      allTypes: false,
+      longLength: false,
+    });
+  };
+
+  const calculateScore = (password, feedbackSuggestions) => {
+    let newScore = 0;
+    const newRequirements = { ...requirementsMet };
+
+    // Helper function to update score and description
+    const updateScoreAndDesc = (requirement, points, desc) => {
+      if (!newRequirements[requirement]) {
+        newScore += points;
+        setScoreDesc(desc);
+        newRequirements[requirement] = true;
+      }
+    };
+
+    // Helper function to subtract score if requirement no longer met
+    const removeScoreAndDesc = (requirement, points) => {
+      if (newRequirements[requirement]) {
+        newScore -= points;
+        setScoreDesc('');
+        newRequirements[requirement] = false;
+      }
+    };
+
+    // Length Check
+    if (password.length >= 16) {
+      updateScoreAndDesc('length', 20, "+20 Password meets length requirement");
+    } else {
+      removeScoreAndDesc('length', 20);
+    }
+
+    // Lowercase
+    if (/[a-z]/.test(password)) {
+      updateScoreAndDesc('lowercase', 10, "+10 Password contains lowercase letter");
+    } else {
+      removeScoreAndDesc('lowercase', 10);
+    }
+
+    // Uppercase
+    if (/[A-Z]/.test(password)) {
+      updateScoreAndDesc('uppercase', 10, "+10 Password contains uppercase letter");
+    } else {
+      removeScoreAndDesc('uppercase', 10);
+    }
+
+    // Number
+    if (/[0-9]/.test(password)) {
+      updateScoreAndDesc('number', 10, "+10 Password contains number");
+    } else {
+      removeScoreAndDesc('number', 10);
+    }
+
+    // Special Character
+    if (/[^A-Za-z0-9]/.test(password)) {
+      updateScoreAndDesc('specialChar', 10, "+10 Password contains special character");
+    } else {
+      removeScoreAndDesc('specialChar', 10);
+    }
+
+    // Combination of all reqs
+    const hasAllTypes =
+      newRequirements.length &&
+      newRequirements.lowercase &&
+      newRequirements.uppercase &&
+      newRequirements.number &&
+      newRequirements.specialChar;
+
+    if (hasAllTypes) {
+      updateScoreAndDesc('allTypes', 20, "+20 Password meets all requirements");
+    } else {
+      removeScoreAndDesc('allTypes', 20);
+    }
+
+    // Longer Than 20 Characters
+    if (password.length > 20) {
+      updateScoreAndDesc('longLength', 10, "+10 Password is longer than 20 characters");
+    } else {
+      removeScoreAndDesc('longLength', 10);
+    }
+
+    // No Suggestions from zxcvbn
+    if (feedbackSuggestions.length === 0) {
+      updateScoreAndDesc('noSuggestions', 10, "+10 Password avoids common patterns");
+    } else {
+      removeScoreAndDesc('noSuggestions', 10);
+    }
+
+    setScore(score + newScore);
+    setRequirementsMet(newRequirements);
+  };
 
   const getStrengthLevel = () => {
     if (strength === 0) return strengthLevels[0];
@@ -55,29 +174,47 @@ export function PasswordMeter() {
           <div
             className="password-strength-level"
             style={{
-              width: `${(strength) * 25}%`,
+              width: `${((score) * 100)/100}%`,
               backgroundColor: strengthLevel.color,
             }}
           ></div>
         </div>
       </div>
       <ul className="password-requirements">
-        <li className={password.length >= 8 ? 'valid' : ''}>
+        <li className={password.length >= 16 ? 'valid' : ''}>
           • At least 16 characters
         </li>
-        <li className={/[A-Z]/.test(password) ? 'valid' : ''}>
+        <li className={requirementsMet.uppercase ? 'valid' : ''}>
           • At least one uppercase letter
         </li>
-        <li className={/[a-z]/.test(password) ? 'valid' : ''}>
+        <li className={requirementsMet.lowercase ? 'valid' : ''}>
           • At least one lowercase letter
         </li>
-        <li className={/[0-9]/.test(password) ? 'valid' : ''}>
+        <li className={requirementsMet.number ? 'valid' : ''}>
           • At least one number
         </li>
-        <li className={/[^A-Za-z0-9]/.test(password) ? 'valid' : ''}>
+        <li className={requirementsMet.specialChar ? 'valid' : ''}>
           • At least one special character
         </li>
       </ul>
+      <div className="scoring-meter">
+        <div className="scoring-header">
+          <span>Scoring</span>
+          <span style={{ color: '#ea2d8c' }}>{scoreDesc}</span>
+        </div>
+        <div className='scoring-bar'>
+          <CircularProgressbar
+            value={score}
+            maxValue={100}
+            text={`${score}%`}
+            styles={buildStyles({
+              textColor: strengthLevel.color,
+              pathColor: strengthLevel.color,
+              trailColor: '#e0e0e0',
+            })}
+          />
+        </div>
+      </div>
     </div>
   );
 }
