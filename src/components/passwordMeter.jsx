@@ -55,7 +55,7 @@ export function PasswordMeter() {
           <div
             className="password-strength-level"
             style={{
-              width: `${(strength + 1) * 25}%`,
+              width: `${(strength) * 25}%`,
               backgroundColor: strengthLevel.color,
             }}
           ></div>
@@ -63,7 +63,7 @@ export function PasswordMeter() {
       </div>
       <ul className="password-requirements">
         <li className={password.length >= 8 ? 'valid' : ''}>
-          • At least 8 characters
+          • At least 16 characters
         </li>
         <li className={/[A-Z]/.test(password) ? 'valid' : ''}>
           • At least one uppercase letter
