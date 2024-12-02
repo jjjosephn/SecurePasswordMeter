@@ -43,8 +43,8 @@ export function PasswordGenerator() {
          password = generateNumber(password);
       }
 
-      if (password.length < 16) {
-         const spaceCount = 16 - password.length;
+      if (password.length < 20) {
+         const spaceCount = 20 - password.length;
          const word = generate({minLength: spaceCount});
          console.log(word);
          password += word;
