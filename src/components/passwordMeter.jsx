@@ -154,7 +154,7 @@ export function PasswordMeter() {
         </label>
         <input
           id="password"
-          type="password"
+          type="text"
           placeholder="Enter your password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
