@@ -192,6 +192,9 @@ export function PasswordMeter() {
         <li className={requirementsMet.specialChar ? 'valid' : ''}>
           • At least one special character
         </li>
+        <li className={requirementsMet.noSuggestions ? 'valid' : ''}>
+          • Avoids common patterns
+        </li>
       </ul>
       <div className="scoring-meter">
         <div className="scoring-header">
