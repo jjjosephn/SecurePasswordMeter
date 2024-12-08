@@ -12,7 +12,6 @@ const strengthLevels = [
 
 export function PasswordMeter() {
   const [password, setPassword] = useState('');
-  const [strength, setStrength] = useState(0);
   const [score, setScore] = useState(0);
   const [scoreDesc, setScoreDesc] = useState([]);
   const [requirementsMet, setRequirementsMet] = useState({
@@ -28,11 +27,9 @@ export function PasswordMeter() {
 
   useEffect(() => {
     if (!password) {
-      setStrength(0);
       resetScore();
     } else {
       const result = zxcvbn(password);
-      setStrength(result.score);
       calculateScore(password, result.feedback.suggestions);
     }
   }, [password]);
@@ -141,10 +138,9 @@ export function PasswordMeter() {
   };
 
   const getStrengthLevel = () => {
-    if (strength === 0) return strengthLevels[0];
-    if (strength === 1) return strengthLevels[1];
-    if (strength === 2) return strengthLevels[2];
-    if (strength === 3) return strengthLevels[3];
+    if (score <= 20) return strengthLevels[0];
+    if (score <= 40) return strengthLevels[1];
+    if (score <= 70) return strengthLevels[2];
     return strengthLevels[3];
   };
 
@@ -181,7 +177,7 @@ export function PasswordMeter() {
         </div>
       </div>
       <ul className="password-requirements">
-        <li className={password.length >= 16 ? 'valid' : ''}>
+        <li className={requirementsMet.length ? 'valid' : ''}>
           • At least 16 characters
         </li>
         <li className={requirementsMet.uppercase ? 'valid' : ''}>
